@@ -6,7 +6,7 @@ Escriba el codigo que ejecute la accion solicitada.
 
 import zipfile
 import pandas as pd
-
+import glob
 
 def zip_to_df(zip, csv_name):
     with zipfile.ZipFile(zip, 'r') as archivo_zip:
@@ -57,22 +57,18 @@ def clean_campaign_data():
 
     
 
-    """
-    dic = {'files/input/bank-marketing-campaing-0.csv.zip':'bank_marketing_0.csv', 
-           'files/input/bank-marketing-campaing-1.csv.zip':'bank_marketing_1.csv',
-           'files/input/bank-marketing-campaing-2.csv.zip':'bank_marketing_2.csv',
-           'files/input/bank-marketing-campaing-3.csv.zip':'bank_marketing_3.csv',
-           'files/input/bank-marketing-campaing-4.csv.zip':'bank_marketing_4.csv',
-           'files/input/bank-marketing-campaing-5.csv.zip':'bank_marketing_5.csv', 
-           'files/input/bank-marketing-campaing-6.csv.zip':'bank_marketing_6.csv',
-           'files/input/bank-marketing-campaing-7.csv.zip':'bank_marketing_7.csv',
-           'files/input/bank-marketing-campaing-8.csv.zip':'bank_marketing_8.csv',
-           'files/input/bank-marketing-campaing-9.csv.zip':'bank_marketing_9.csv'}  
-
+    """ 
+    files = glob.glob("files/input/*.zip")
     dataframes = []
-    for zip, csv in dic.items():
-        df = zip_to_df(zip, csv)
-        dataframes.append(df)
+
+    for file in files: 
+        with zipfile.ZipFile(file, 'r') as archivo_zip:
+            archivo_csv = archivo_zip.namelist()[0] 
+            with archivo_zip.open(archivo_csv) as archivo:
+                df = pd.read_csv(archivo)
+                dataframes.append(df)
+
+
     df_combinado = pd.concat(dataframes, ignore_index=False)
     df_combinado['month'] = pd.to_datetime(df_combinado['month'], format='%b').dt.month
 
@@ -92,12 +88,11 @@ def clean_campaign_data():
     # campaign['last_contact_date']= '2022-' + df_combinado['day'].astype(str) + '-' + df_combinado['month'].astype(str)
     campaign.to_csv('files/output/campaign.csv', index=False)
 
-    print(campaign['last_contact_date'].value_counts())
+    # print(campaign['last_contact_date'].value_counts())
 
     # economics
     economics = df_combinado[['client_id', 'cons_price_idx', 'euribor_three_months']].copy()    
     economics.to_csv('files/output/economics.csv', index=False)
-
     
     return
 
